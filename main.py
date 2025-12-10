@@ -4,6 +4,7 @@ import logging
 import sys
 from dotenv import load_dotenv
 import os
+from time_h import sec_ago
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -14,6 +15,7 @@ load_dotenv()
 TOKEN = os.getenv("token")
 
 dp = Dispatcher()
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
 def split(text: str, max_length: int = 4096) -> list[str]:
@@ -55,7 +57,27 @@ def split(text: str, max_length: int = 4096) -> list[str]:
     return parts
 
 
-# https://api.demonlist.org/levels/classic/time_machine?timestamp=2025-12-10T07:40:00.000Z
+# https://api.demonlist.org/levels/classic/time_machine?timestamp={hour_ago()}
+
+
+async def get_prev_list():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            f"https://api.demonlist.org/levels/classic/time_machine?timestamp={sec_ago(300)}"
+        ) as r:
+            prev_list = await r.json()
+        return prev_list["data"]
+
+
+async def check_lists():
+    prev_list = await get_prev_list()
+    lst = []
+    for d in prev_list:
+        if d.get("place") == d.get("current_place"):
+            pass
+        else:
+            lst.append(d)
+    return lst
 
 
 async def get_list(limit=50):
@@ -67,7 +89,7 @@ async def get_list(limit=50):
     temp = []
     for d in demons.get("data"):
         temp.append(
-            f"{d.get('place')}: <code>{d.get('name')}</code> от <code>{d.get('creator')}</code>. Верифер: <code>{d.get('verifier')}</code>. ID: <code>{d.get('level_id')}</code>"
+            f"<b>{d.get('place')}:</b> <code><b>{d.get('name')}</b></code> от <code>{d.get('creator')}</code>. Верифер: <code>{d.get('verifier')}</code>. ID: <code>{d.get('level_id')}</code>"
         )
     return "\n".join(temp)
 
@@ -102,6 +124,7 @@ async def start(message):
 
 @dp.message(Command("list"))
 async def list_cmd(message):
+    checking = await message.reply("⏳️ Получаю...")
     if message.text.replace("/list", "") != "":
         try:
             limit = int(message.text.replace("/list ", ""))
@@ -112,19 +135,46 @@ async def list_cmd(message):
         limit = 10
     demon_list = await get_list(limit)
     lst = split(demon_list)
+    await bot.delete_message(chat_id=message.chat.id, message_id=checking.message_id)
     for d in lst:
         await message.reply(d)
 
 
+@dp.message(Command("changes"))
+async def prev_cmd(message):
+    checking = await message.reply("⏳️ Проверяю...")
+    changes = await check_lists()
+    msg = ""
+    if len(changes) != 0:
+        for d in changes:
+            msg += f"\
+- <b><code>{d.get('name')}</code></b> переместился с <b>{d.get('place')}</b> на <b>{d.get('current_place')}</b> позицию\n\
+"
+        await bot.edit_message_text(
+            text=msg, chat_id=message.chat.id, message_id=checking.message_id
+        )
+    else:
+        await bot.edit_message_text(
+            text="🚫 Нет изменений",
+            chat_id=message.chat.id,
+            message_id=checking.message_id,
+        )
+
+
 @dp.message(Command("demon"))
 async def demon_cmd(message):
+    checking = await message.reply("⏳️ Получаю...")
     if message.text.replace("/demon", "") != "":
         try:
             place = int(message.text.replace("/demon ", ""))
         except ValueError:
             await message.reply("⛔️ Не число!")
             return False
-        await message.reply(await get_demon(place))
+        await bot.edit_message_text(
+            text=await get_demon(place),
+            chat_id=message.chat.id,
+            message_id=checking.message_id,
+        )
     else:
         await message.reply("⛔️ Введите позицию!")
 
@@ -134,12 +184,12 @@ async def help_cmd(message):
     await message.answer("""
 /help - вывести это сообщение\n\
 /list [лимит] - вывести топ-[лимит] демонов. По умолчанию лимит 10.\n\
-/demon [позиция] - получить информацию о демоне с позиции\
+/demon [позиция] - получить информацию о демоне с позиции\n\
+/changes - узнать, позиции каких демонов изменились\
 """)
 
 
 async def main():
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await dp.start_polling(bot)
 
 
