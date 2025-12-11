@@ -4,7 +4,7 @@ import logging
 import sys
 from dotenv import load_dotenv
 import os
-from time_h import sec_ago
+from time_h import time_machine_param, current_date
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -63,7 +63,7 @@ def split(text: str, max_length: int = 4096) -> list[str]:
 async def get_prev_list():
     async with aiohttp.ClientSession() as session:
         async with session.get(
-            f"https://api.demonlist.org/levels/classic/time_machine?timestamp={sec_ago(300)}"
+            f"https://api.demonlist.org/levels/classic/time_machine?timestamp={time_machine_param()}"
         ) as r:
             prev_list = await r.json()
         return prev_list["data"]
@@ -144,7 +144,7 @@ async def list_cmd(message):
 async def prev_cmd(message):
     checking = await message.reply("⏳️ Проверяю...")
     changes = await check_lists()
-    msg = ""
+    msg = f"<b>Изменения на {current_date()}</b>\n"
     if len(changes) != 0:
         for d in changes:
             msg += f"\
@@ -163,13 +163,13 @@ async def prev_cmd(message):
 
 @dp.message(Command("demon"))
 async def demon_cmd(message):
-    checking = await message.reply("⏳️ Получаю...")
     if message.text.replace("/demon", "") != "":
         try:
             place = int(message.text.replace("/demon ", ""))
         except ValueError:
             await message.reply("⛔️ Не число!")
             return False
+        checking = await message.reply("⏳️ Получаю...")
         await bot.edit_message_text(
             text=await get_demon(place),
             chat_id=message.chat.id,
