@@ -179,6 +179,17 @@ async def demon_cmd(message):
         await message.reply("⛔️ Введите позицию!")
 
 
+@dp.message(Command("status"))
+async def status_cmd(message):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            f"https://api.demonlist.org/levels/classic?place=1"
+        ) as r:
+            api_code = r.status
+            if api_code > 200:
+                api_status = "Недоступен"
+
+
 @dp.message(Command("help"))
 async def help_cmd(message):
     await message.answer("""
