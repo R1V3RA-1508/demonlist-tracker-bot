@@ -3,7 +3,7 @@ from aiogram.filters import Command
 
 from bot.helpers.time_h import current_date
 from bot.api import get_list, get_demon, check_lists
-from bot.handlers.split import split
+from bot.helpers.split import split
 
 dp = Router()
 
