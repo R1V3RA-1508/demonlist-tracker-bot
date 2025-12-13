@@ -5,8 +5,11 @@ import sys
 from dotenv import load_dotenv
 import os
 from pathlib import Path
+import sqlite3
+from bot.regular_check import check
 
 sys.path.append(str(Path(__file__).parent))
+# db_path = str(Path(__file__).parent) / "db" / "subs.db"
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -22,9 +25,36 @@ dp = Dispatcher()
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
+def init_db():
+    db = sqlite3.connect("db/subs.db").cursor()
+    logging.info("Connected to subs.db")
+    try:
+        db.execute("CREATE TABLE users (id INTEGER PRIMARY KEY);")
+        logging.info('Table "users" created')
+    except sqlite3.OperationalError:
+        logging.info('Table "users" already exists')
+        if db.execute("SELECT id FROM users;").fetchone() is not None:
+            logging.info(
+                f"Number of IDs in db: {len(db.execute('SELECT id FROM users;').fetchone())}"
+            )
+        else:
+            logging.info("db is empty")
+
+
+async def periodic_check(bot):
+    while True:
+        try:
+            await check(bot)
+        except Exception as e:
+            logging.error(e)
+        await asyncio.sleep(86400)
+
+
 async def main():
+    init_db()
     dp.include_router(dp_big)
     dp.include_router(dp_small)
+    asyncio.create_task(periodic_check(bot))
     await dp.start_polling(bot)
 
 

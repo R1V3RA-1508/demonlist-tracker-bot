@@ -1,9 +1,13 @@
 import asyncio
+import sqlite3
+import logging
 
 from aiogram import Router
 from aiogram.filters import CommandStart, Command
 
 dp = Router()
+db_obj = sqlite3.connect("db/subs.db")
+db = db_obj.cursor()
 
 
 @dp.message(CommandStart())
@@ -21,3 +25,39 @@ async def help_cmd(message):
 /demon [позиция] - получить информацию о демоне с позиции\n\
 /changes - узнать, позиции каких демонов изменились\
 """)
+
+
+@dp.message(Command("sub"))
+async def sub_cmd(message):
+    try:
+        if (
+            db.execute(f"SELECT id FROM users WHERE id = {message.chat.id}").fetchone()
+            is None
+        ):
+            db.execute(f"INSERT INTO users (id) VALUES ({message.chat.id})")
+            await message.reply("✅ Вы подписались на ежедневную рассылку изменений")
+            logging.info(f"New record in db: {message.chat.id}")
+            db_obj.commit()
+        else:
+            await message.reply("🚫 Вы уже подписаны!")
+    except Exception as e:
+        logging.error(e)
+        await message.reply("⛔️ Ошибка: не удалось подписаться на рассылку")
+
+
+@dp.message(Command("unsub"))
+async def unsub_cmd(message):
+    try:
+        if (
+            db.execute(f"SELECT id FROM users WHERE id = {message.chat.id}").fetchone()
+            is not None
+        ):
+            db.execute(f"DELETE FROM users WHERE id = ({message.chat.id})")
+            await message.reply("✅ Вы отписались от ежедневной рассылки изменений")
+            logging.info(f"Deleted record from db: {message.chat.id}")
+            db_obj.commit()
+        else:
+            await message.reply("🚫 Вы не подписаны!")
+    except Exception as e:
+        logging.error(e)
+        await message.reply("⛔️ Ошибка: не удалось отписаться от рассылки")
