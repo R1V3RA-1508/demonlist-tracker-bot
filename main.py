@@ -1,15 +1,15 @@
-# import aiohttp
+import os
+from pathlib import Path
+
+os.mkdir(f"{str(Path(__file__).parent)}/db")
 import asyncio
 import logging
 import sys
 from dotenv import load_dotenv
-import os
-from pathlib import Path
 import sqlite3
 from bot.regular_check import check
 
 sys.path.append(str(Path(__file__).parent))
-# db_path = str(Path(__file__).parent) / "db" / "subs.db"
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -52,8 +52,8 @@ async def periodic_check(bot):
 
 async def main():
     init_db()
-    dp.include_router(dp_big)
-    dp.include_router(dp_small)
+    # dp.include_router(dp_big)
+    # dp.include_router(dp_small)
     asyncio.create_task(periodic_check(bot))
     await dp.start_polling(bot)
 
