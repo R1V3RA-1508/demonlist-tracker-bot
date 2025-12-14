@@ -5,6 +5,8 @@ import logging
 from aiogram import Router
 from aiogram.filters import CommandStart, Command
 
+from bot.helpers.split import split
+
 dp = Router()
 db_obj = sqlite3.connect("db/subs.db")
 db = db_obj.cursor()
@@ -61,3 +63,16 @@ async def unsub_cmd(message):
     except Exception as e:
         logging.error(e)
         await message.reply("⛔️ Ошибка: не удалось отписаться от рассылки")
+
+
+@dp.message(Command("db"))
+async def db_cmd(message):
+    logging.info(message.chat.id)
+    if message.chat.id == 2110265968:
+        database = db.execute("SELECT id FROM users;").fetchone()
+        logging.info(database)
+        split_db = split(str(database))
+        for i in split_db:
+            await message.reply(i)
+    else:
+        await message.reply("Доступно только создателю")

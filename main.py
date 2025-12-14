@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 
-os.mkdir(f"{str(Path(__file__).parent)}/db")
+# try:
+#    os.mkdir(f"{str(Path(__file__).parent)}/db")
+# except FileExistsError:
+#    pass
 import asyncio
 import logging
 import sys
