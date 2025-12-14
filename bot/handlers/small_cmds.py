@@ -1,6 +1,8 @@
 import asyncio
 import sqlite3
 import logging
+from os import getenv
+from dotenv import load_dotenv
 
 from aiogram import Router
 from aiogram.filters import CommandStart, Command
@@ -10,6 +12,9 @@ from bot.helpers.split import split
 dp = Router()
 db_obj = sqlite3.connect("db/subs.db")
 db = db_obj.cursor()
+
+load_dotenv()
+creator_id = getenv("creator_id")
 
 
 @dp.message(CommandStart())
@@ -67,12 +72,8 @@ async def unsub_cmd(message):
 
 @dp.message(Command("db"))
 async def db_cmd(message):
-    logging.info(message.chat.id)
-    if message.chat.id == 2110265968:
+    if message.chat.id == creator_id:
         database = db.execute("SELECT id FROM users;").fetchone()
-        logging.info(database)
         split_db = split(str(database))
         for i in split_db:
             await message.reply(i)
-    else:
-        await message.reply("Доступно только создателю")

@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
 
-# try:
-#    os.mkdir(f"{str(Path(__file__).parent)}/db")
-# except FileExistsError:
-#    pass
+try:
+    os.mkdir(f"{str(Path(__file__).parent)}/db")
+except FileExistsError:
+    pass
 import asyncio
 import logging
 import sys
@@ -55,8 +55,8 @@ async def periodic_check(bot):
 
 async def main():
     init_db()
-    # dp.include_router(dp_big)
-    # dp.include_router(dp_small)
+    dp.include_router(dp_big)
+    dp.include_router(dp_small)
     asyncio.create_task(periodic_check(bot))
     await dp.start_polling(bot)
 
