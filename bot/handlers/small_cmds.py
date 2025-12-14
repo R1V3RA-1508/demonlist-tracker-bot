@@ -1,8 +1,6 @@
 import asyncio
 import sqlite3
 import logging
-from os import getenv
-from dotenv import load_dotenv
 
 from aiogram import Router
 from aiogram.filters import CommandStart, Command
@@ -13,8 +11,7 @@ dp = Router()
 db_obj = sqlite3.connect("db/subs.db")
 db = db_obj.cursor()
 
-load_dotenv()
-creator_id = getenv("creator_id")
+creator_id = 2110265968
 
 
 @dp.message(CommandStart())
