@@ -7,10 +7,9 @@ db = db_obj.cursor()
 
 
 async def check(bot):
-    # checking = await message.reply("⏳️ Проверяю...")
     ids = db.execute("SELECT id FROM users;").fetchone()
     changes = await check_lists()
-    # changes.append({"name": "test", "place": 69, "current_place": 67})
+    # changes for test: changes.append({"name": "test", "place": 69, "current_place": 67})
     msg = f"<b>Изменения на {current_date()}</b>\n"
     if len(changes) != 0:
         for d in changes:
@@ -20,5 +19,4 @@ async def check(bot):
         for id in ids:
             await bot.send_message(text=msg, chat_id=id)
     else:
-        # await bot.send_message(text=msg + "Нет изменений", chat_id=2110265968)
         pass

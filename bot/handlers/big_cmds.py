@@ -11,7 +11,9 @@ dp = Router()
 @dp.message(Command("list"))
 async def list_cmd(message, bot):
     checking = await message.reply("⏳️ Получаю...")
-    if message.text.replace("/list", "") != "":
+    if (
+        message.text.replace("/list", "") != ""
+    ):  # Checking for limit, if no, 10 by default
         try:
             limit = int(message.text.replace("/list ", ""))
         except ValueError:

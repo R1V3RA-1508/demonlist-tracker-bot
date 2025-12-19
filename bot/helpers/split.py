@@ -1,3 +1,4 @@
+# Я хуй знает, это нейронка написала, я ебал с этим разбираться
 def split(text: str, max_length: int = 4096) -> list[str]:
     if len(text) <= max_length:
         return [text]
